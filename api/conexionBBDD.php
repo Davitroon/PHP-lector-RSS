@@ -1,7 +1,7 @@
 <?php
 
 // Ruta a tu archivo SQLite
-$dbFile = __DIR__ . '/database.sqlite';
+$dbFile = __DIR__ . '/periodicos.sqlite';
 
 // Verificar que el archivo existe
 if (!file_exists($dbFile)) {
