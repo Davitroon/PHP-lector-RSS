@@ -1,0 +1,27 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "index.php",
+            "use": "@vercel/php"
+        },
+        {
+            "src": "RSSEIMundo.php",
+            "use": "@vercel/php"
+        },
+        {
+            "src": "RSSEIPais.php",
+            "use": "@vercel/php"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/",
+            "dest": "/index.php"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/$1"
+        }
+    ]
+}
