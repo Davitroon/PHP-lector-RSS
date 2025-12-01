@@ -3,15 +3,15 @@
     "builds": [
         {
             "src": "index.php",
-            "use": "@php-web-builder/vercel"
+            "use": "@php-lambda/vercel"
         },
         {
             "src": "RSSEIMundo.php",
-            "use": "@php-web-builder/vercel"
+            "use": "@php-lambda/vercel"
         },
         {
             "src": "RSSEIPais.php",
-            "use": "@php-web-builder/vercel"
+            "use": "@php-lambda/vercel"
         }
     ],
     "routes": [
