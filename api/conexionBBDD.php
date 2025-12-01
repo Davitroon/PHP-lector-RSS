@@ -1,10 +1,10 @@
 <?php
 
-$Repit=false;
-$host="localhost";
-$user="root";
-$password="";
+// Ruta a tu archivo SQLite
+$dbFile = __DIR__ . '/database.sqlite';
 
-$link= mysqli_connect($host,$user,$password);
-$tildes=$link->query("SET NAMES 'utf8'");
-mysqli_select_db($link,'periodicos');
+// Conectar a SQLite
+$db = new SQLite3($dbFile);
+
+// Opcional: habilitar UTF-8
+$db->exec("PRAGMA encoding = 'UTF-8';");

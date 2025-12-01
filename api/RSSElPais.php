@@ -1,59 +1,63 @@
 <?php
 
 require_once "conexionRSS.php";
+require_once "conexionBBDD.php"; // ahora $db es SQLite3
 
 $sXML = download("https://ep00.epimg.net/rss/elpais/portada.xml");
 
-$oXML = new SimpleXMLElement($sXML);
+if (!$sXML) {
+    die("Error: no se pudo descargar el XML.");
+}
 
-require_once "conexionBBDD.php";
+try {
+    $oXML = new SimpleXMLElement($sXML);
+} catch (Exception $e) {
+    die("Error: el XML no es válido. " . $e->getMessage());
+}
 
-if (mysqli_connect_error()) {
-    printf("Conexión a el periódico El País ha fallado");
-} else {
+$contador = 0;
+$categoria = ["Política", "Deportes", "Ciencia", "España", "Economía", "Música", "Cine", "Europa", "Justicia"];
+$categoriaFiltro = "";
 
-    $contador = 0;
-    $categoria = ["Política", "Deportes", "Ciencia", "España", "Economía", "Música", "Cine", "Europa", "Justicia"];
-    $categoriaFiltro = "";
+foreach ($oXML->channel->item as $item) {
 
-    foreach ($oXML->channel->item as $item) {
-
-        for ($i = 0; $i < count($item->category); $i++) {
-
-            for ($j = 0; $j < count($categoria); $j++) {
-
-                if ($item->category[$i] == $categoria[$j]) {
-                    $categoriaFiltro = "[" . $categoria[$j] . "]" . $categoriaFiltro;
-                }
+    // Filtrar categorías
+    for ($i = 0; $i < count($item->category); $i++) {
+        for ($j = 0; $j < count($categoria); $j++) {
+            if ($item->category[$i] == $categoria[$j]) {
+                $categoriaFiltro = "[" . $categoria[$j] . "]" . $categoriaFiltro;
             }
         }
-
-        $fPubli = strtotime($item->pubDate);
-        $new_fPubli = date('Y-m-d', $fPubli);
-
-        $content = $item->children("content", true);
-        $encoded = $content->encoded;
-
-        $sql = "SELECT link FROM elpais";
-        $result = mysqli_query($link, $sql);
-
-        while ($sqlCompara = mysqli_fetch_array($result)) {
-            if ($sqlCompara['link'] == $item->link) {
-
-                $Repit = true;
-                $contador = $contador + 1;
-                $contadorTotal = $contador;
-                break;
-            } else {
-                $Repit = false;
-            }
-        }
-        if ($Repit == false && $categoriaFiltro <> "") {
-
-            $sql = "INSERT INTO elpais VALUES('','$item->title','$item->link','$item->description','$categoriaFiltro','$new_fPubli','$encoded')";
-            $result = mysqli_query($link, $sql);
-        }
-
-        $categoriaFiltro = "";
     }
+
+    $fPubli = strtotime($item->pubDate);
+    $new_fPubli = date('Y-m-d', $fPubli);
+
+    $content = $item->children("content", true);
+    $encoded = $content->encoded;
+
+    // Comprobar si el link ya existe
+    $result = $db->query("SELECT link FROM elpais");
+    $Repit = false;
+    while ($sqlCompara = $result->fetchArray(SQLITE3_ASSOC)) {
+        if ($sqlCompara['link'] == $item->link) {
+            $Repit = true;
+            $contador++;
+            break;
+        }
+    }
+
+    // Insertar si no existe y hay categoría
+    if (!$Repit && $categoriaFiltro !== "") {
+        $stmt = $db->prepare('INSERT INTO elpais (titulo, link, descripcion, categoria, fPubli, contenido) VALUES (:titulo, :link, :descripcion, :categoria, :fPubli, :contenido)');
+        $stmt->bindValue(':titulo', $item->title);
+        $stmt->bindValue(':link', $item->link);
+        $stmt->bindValue(':descripcion', $item->description);
+        $stmt->bindValue(':categoria', $categoriaFiltro);
+        $stmt->bindValue(':fPubli', $new_fPubli);
+        $stmt->bindValue(':contenido', $encoded);
+        $stmt->execute();
+    }
+
+    $categoriaFiltro = "";
 }
