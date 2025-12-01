@@ -2,16 +2,8 @@
     "version": 2,
     "builds": [
         {
-            "src": "index.php",
-            "use": "@php-lambda/vercel"
-        },
-        {
-            "src": "RSSEIMundo.php",
-            "use": "@php-lambda/vercel"
-        },
-        {
-            "src": "RSSEIPais.php",
-            "use": "@php-lambda/vercel"
+            "src": "*.php",
+            "use": "@vercel/php"
         }
     ],
     "routes": [
