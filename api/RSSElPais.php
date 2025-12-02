@@ -1,7 +1,7 @@
 <?php
 
 require_once "conexionRSS.php";
-require_once "conexionBBDD.php"; // ahora $db es SQLite3
+require_once "conexionBBDD.php";
 
 $sXML = download("https://ep00.epimg.net/rss/elpais/portada.xml");
 
@@ -13,6 +13,17 @@ try {
     $oXML = new SimpleXMLElement($sXML);
 } catch (Exception $e) {
     die("Error: el XML no es válido. " . $e->getMessage());
+}
+
+// Traer todos los links existentes antes del bucle
+$existingLinks = [];
+$response = $db->query("SELECT link FROM elpais");
+
+if (isset($response['results'][0]['response']['result']['rows'])) {
+    foreach ($response['results'][0]['response']['result']['rows'] as $row) {
+        $val = isset($row[0]['value']) ? $row[0]['value'] : $row[0];
+        $existingLinks[] = $val;
+    }
 }
 
 $contador = 0;
@@ -34,30 +45,33 @@ foreach ($oXML->channel->item as $item) {
     $new_fPubli = date('Y-m-d', $fPubli);
 
     $content = $item->children("content", true);
-    $encoded = $content->encoded;
+    $encoded = (string)$content->encoded;
+    $link = (string)$item->link;
 
-    // Comprobar si el link ya existe
-    $result = $db->query("SELECT link FROM elpais");
-    $Repit = false;
-    while ($sqlCompara = $result->fetchArray(SQLITE3_ASSOC)) {
-        if ($sqlCompara['link'] == $item->link) {
-            $Repit = true;
-            $contador++;
-            break;
-        }
-    }
+    // Verificamos contra el array en memoria
+    $Repit = in_array($link, $existingLinks);
 
     // Insertar si no existe y hay categoría
     if (!$Repit && $categoriaFiltro !== "") {
-        $stmt = $db->prepare('INSERT INTO elpais (titulo, link, descripcion, categoria, fPubli, contenido) VALUES (:titulo, :link, :descripcion, :categoria, :fPubli, :contenido)');
-        $stmt->bindValue(':titulo', $item->title);
-        $stmt->bindValue(':link', $item->link);
-        $stmt->bindValue(':descripcion', $item->description);
-        $stmt->bindValue(':categoria', $categoriaFiltro);
-        $stmt->bindValue(':fPubli', $new_fPubli);
-        $stmt->bindValue(':contenido', $encoded);
-        $stmt->execute();
+        
+        $sql = "INSERT INTO elpais (titulo, link, descripcion, categoria, fPubli, contenido) VALUES (?, ?, ?, ?, ?, ?)";
+        
+        $params = [
+            (string)$item->title,
+            $link,
+            (string)$item->description,
+            $categoriaFiltro,
+            $new_fPubli,
+            $encoded
+        ];
+
+        $db->query($sql, $params);
+        
+        // Actualizamos lista local
+        $existingLinks[] = $link;
+        $contador++;
     }
 
     $categoriaFiltro = "";
 }
+?>

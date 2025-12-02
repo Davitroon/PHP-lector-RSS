@@ -41,14 +41,31 @@
     </form>
 
     <?php
-    require_once "conexionBBDD.php"; // $db es SQLite3
+    require_once "conexionBBDD.php";
     require_once "RSSElPais.php";
     require_once "RSSElMundo.php";
 
-    // Función para mostrar resultados
     function filtros($sql, $db)
     {
-        $result = $db->query($sql);
+        $response = $db->query($sql);
+
+        if (!isset($response['results'][0]['response']['result'])) {
+            echo "<p>No se encontraron resultados o hubo un error en la conexión.</p>";
+            var_dump($response);
+            return;
+        }
+
+        $data = $response['results'][0]['response']['result'];
+
+        // Si no hay filas, salimos
+        if (empty($data['rows'])) {
+            echo "<p>No hay noticias con ese filtro.</p>";
+            return;
+        }
+
+        $cols = $data['cols'];
+        $rows = $data['rows'];
+
         echo "<table style='border: 5px #E4CCE8 solid;'>";
         echo "<tr>
                 <th style='color:#66E9D9;'>TITULO</th>
@@ -59,15 +76,27 @@
                 <th style='color:#66E9D9;'>FECHA DE PUBLICACIÓN</th>
               </tr>";
 
-        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+        foreach ($rows as $rawRow) {
+
+            $row = [];
+            foreach ($rawRow as $index => $cell) {
+                $colName = $cols[$index]['name'];
+                $val = (is_array($cell) && isset($cell['value'])) ? $cell['value'] : $cell;
+                $row[$colName] = $val;
+            }
+
             echo "<tr>";
             echo "<td style='border: 1px #E4CCE8 solid;'>" . $row['titulo'] . "</td>";
-            echo "<td style='border: 1px #E4CCE8 solid;'>" . $row['contenido'] . "</td>";
+
+            $contenido = isset($row['contenido']) ? substr($row['contenido'], 0, 100) . "..." : "";
+            echo "<td style='border: 1px #E4CCE8 solid;'>" . $contenido . "</td>";
+
             echo "<td style='border: 1px #E4CCE8 solid;'>" . $row['descripcion'] . "</td>";
             echo "<td style='border: 1px #E4CCE8 solid;'>" . $row['categoria'] . "</td>";
             echo "<td style='border: 1px #E4CCE8 solid;'><a href='" . $row['link'] . "' target='_blank'>Enlace</a></td>";
+
             $fecha = date_create($row['fPubli']);
-            $fechaConversion = date_format($fecha, 'd-M-Y');
+            $fechaConversion = $fecha ? date_format($fecha, 'd-M-Y') : $row['fPubli'];
             echo "<td style='border: 1px #E4CCE8 solid;'>" . $fechaConversion . "</td>";
             echo "</tr>";
         }
@@ -76,12 +105,15 @@
 
     // Variables de filtros
     $periodicos = isset($_GET['periodicos']) ? $_GET['periodicos'] : 'elpais';
-    $categoria   = isset($_GET['categoria']) ? $_GET['categoria'] : '';
-    $fecha       = isset($_GET['fecha']) ? $_GET['fecha'] : '';
-    $palabra     = isset($_GET['buscar']) ? $_GET['buscar'] : '';
+    $categoria  = isset($_GET['categoria']) ? $_GET['categoria'] : '';
+    $fecha      = isset($_GET['fecha']) ? $_GET['fecha'] : '';
+    $palabra    = isset($_GET['buscar']) ? $_GET['buscar'] : '';
 
-    // Construcción dinámica de la consulta
-    $sql = "SELECT * FROM $periodicos WHERE 1=1"; // 1=1 para concatenar condiciones
+    if ($periodicos !== 'elpais' && $periodicos !== 'elmundo') {
+        $periodicos = 'elpais';
+    }
+
+    $sql = "SELECT * FROM $periodicos WHERE 1=1";
 
     if ($categoria !== '') {
         $sql .= " AND categoria LIKE '%$categoria%'";
@@ -93,7 +125,7 @@
         $sql .= " AND descripcion LIKE '%$palabra%'";
     }
 
-    $sql .= " ORDER BY fPubli DESC";
+    $sql .= " ORDER BY fPubli DESC LIMIT 50";
 
     // Mostrar resultados
     filtros($sql, $db);
