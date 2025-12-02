@@ -1,19 +1,22 @@
-create database periodicos;
-use periodicos;
+CREATE TABLE elmundo (
+  cod INTEGER PRIMARY KEY,
+  titulo TEXT,
+  link TEXT,
+  descripcion TEXT,
+  categoria TEXT,
+  fPubli DATE,
+  contenido TEXT
+);
 
-CREATE TABLE `elmundo` (
-  `cod` int(11) NOT NULL,
-  `titulo` varchar(200) DEFAULT NULL,
-  `link` text,
-  `descripcion` text,
-  `categoria` varchar(20) DEFAULT NULL,
-  `fPubli` date DEFAULT NULL,
-  `contenido` longtext
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Volcado de datos para la tabla `elmundo`
---
+CREATE TABLE elpais (
+  cod INTEGER PRIMARY KEY,
+  titulo TEXT,
+  link TEXT,
+  descripcion TEXT,
+  categoria TEXT,
+  fPubli DATE,
+  contenido TEXT
+);
 
 INSERT INTO `elmundo` (`cod`, `titulo`, `link`, `descripcion`, `categoria`, `fPubli`, `contenido`) VALUES
 (1, 'Pedro Sánchez alerta sobre la abstención: \"Puede dar el triunfo al extremismo\"', 'http://www.elmundo.es/espana/2019/02/17/5c695692fdddff23488b464a.html', 'En los primeros dos mítines del fin de semana tras la <a href=\"https://www.elmundo.es/espana/2019/02/15/5c667ba8fc6c83bb478b45f6.html\">convocatoria</a> de las ', '[Política][España]', '2019-02-17', 'http://www.elmundo.es/espana/2019/02/17/5c695692fdddff23488b464a.html'),
@@ -76,25 +79,7 @@ INSERT INTO `elmundo` (`cod`, `titulo`, `link`, `descripcion`, `categoria`, `fPu
 (58, 'Muere una niña de tres años tras ser atropellada en una finca de Peraleda de la Mata', 'http://www.elmundo.es/espana/2019/02/18/5c6b2b26fdddffeeb38b45f7.html', 'Una <strong>niña de tres años</strong> ha fallecido en la tarde este lunes tras ser atropellada por un vehículo en una finca de la localidad cacereña de <strong>Peraleda de la Mata', '[España]', '2019-02-18', 'http://www.elmundo.es/espana/2019/02/18/5c6b2b26fdddffeeb38b45f7.html'),
 (59, 'Borràs dice que el dinero era para comprar las urnas de las elecciones autonómicas, no para el 1-O', 'https://www.elmundo.es/espana/2019/02/20/5c6da5c9fc6c83dd428b4585.html', '<a href=\"https://www.elmundo.es/e/me/meritxell-borras.html\">Meritxell Borràs</a> arranca su declaración como acusada en el <a href=\"https://www.elmundo.es/cataluna/juicio-1o.html\">', '[Política]', '2019-02-20', 'https://www.elmundo.es/espana/2019/02/20/5c6da5c9fc6c83dd428b4585.html');
 
--- --------------------------------------------------------
 
---
--- Estructura de tabla para la tabla `elpais`
---
-
-CREATE TABLE `elpais` (
-  `cod` int(11) NOT NULL,
-  `titulo` varchar(200) DEFAULT NULL,
-  `link` text,
-  `descripcion` text,
-  `categoria` varchar(20) DEFAULT NULL,
-  `fPubli` date DEFAULT NULL,
-  `contenido` longtext
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Volcado de datos para la tabla `elpais`
---
 
 INSERT INTO `elpais` (`cod`, `titulo`, `link`, `descripcion`, `categoria`, `fPubli`, `contenido`) VALUES
 (1, '“La abstención puede dar el triunfo al extremismo”, advierte Pedro Sánchez', 'https://elpais.com/politica/2019/02/17/actualidad/1550398936_090631.html#?ref=rss&format=simple&link=link', 'El presidente del Gobierno insta al voto útil en un acto multitudinario con Fernández Vara en Mérida', '[Política][España]', '2019-02-17', '<p><a href=\"https://elpais.com/tag/pedro_sanchez_perez_castejon/a\">Pedro Sánchez</a> ha apelado al voto progresista y también al de centro por segundo día consecutivo tras el anuncio del <a href=\"https://elpais.com/politica/2019/02/15/actualidad/1550216540_890788.html\">adelanto de las elecciones generales al 28 de abril.</a> El principal temor del PSOE es la desmovilización, que le pasó tanta factura en Andalucía que <a href=\"https://elpais.com/politica/2018/12/26/actualidad/1545856339_830760.html\">perdió la Junta 36 años después</a>. \"Si no hay movilización, la abstención puede dar el triunfo al extremismo. Apelamos no solo a la España de izquierdas y progresista. Tenemos que apelar a la España moderada, sensata, cabal\", ha animado el presidente del Gobierno. \"La amenaza existe, la vemos en Europa y otras partes del mundo\", ha advertido sobre el asentamiento de la extrema derecha en la UE y su llegada al poder en Brasil.</p><p><a href=\"https://elpais.com/politica/2019/02/17/actualidad/1550398936_090631.html#?ref=rss&format=simple&link=seguir\">Seguir leyendo</a>.</p>'),
