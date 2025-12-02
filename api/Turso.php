@@ -7,7 +7,7 @@ class TursoConnection
 
     public function __construct()
     {
-        // Obtenemos las variables que Vercel configuró automáticamente
+        // Obtenemos variables
         $this->url = getenv('TURSO_DATABASE_URL');
         $this->token = getenv('TURSO_AUTH_TOKEN');
         $this->url = str_replace('libsql://', 'https://', $this->url);
@@ -15,15 +15,41 @@ class TursoConnection
 
     public function query($sql, $params = [])
     {
+        // Formatear los parámetros para la API de Turso
+        $args = [];
+        foreach ($params as $p) {
+            if (is_integer($p)) {
+                $args[] = ["type" => "integer", "value" => (string)$p];
+
+            } elseif (is_float($p)) {
+                $args[] = ["type" => "float", "value" => (string)$p];
+
+            } elseif (is_null($p)) {
+                $args[] = ["type" => "null"];
+
+            } else {
+                // Por defecto tratamos todo lo demás como texto
+                $args[] = ["type" => "text", "value" => (string)$p];
+            }
+        }
+
+        // Crear el cuerpo de la petición (Payload)
         $postData = [
-            "statements" => [
+            "requests" => [
                 [
-                    "q" => $sql,
-                    "params" => $params
+                    "type" => "execute",
+                    "stmt" => [
+                        "sql" => $sql,
+                        "args" => $args
+                    ]
+                ],
+                [
+                    "type" => "close"
                 ]
             ]
         ];
 
+        // Configurar cURL
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $this->url . "/v2/pipeline");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
