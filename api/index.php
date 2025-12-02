@@ -1,135 +1,187 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RSS Reader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body>
-    <form action="index.php" method="get">
-        <fieldset>
-            <legend>FILTRO</legend>
-            <label>PERIODICO: </label>
-            <select name="periodicos">
-                <option value="elpais">El País</option>
-                <option value="elmundo">El Mundo</option>
-            </select>
+<body class="bg-gray-100 font-sans text-gray-800 p-6">
 
-            <label>CATEGORIA: </label>
-            <select name="categoria">
-                <option value=""></option>
-                <option value="Política">Política</option>
-                <option value="Deportes">Deportes</option>
-                <option value="Ciencia">Ciencia</option>
-                <option value="España">España</option>
-                <option value="Economía">Economía</option>
-                <option value="Música">Música</option>
-                <option value="Cine">Cine</option>
-                <option value="Europa">Europa</option>
-                <option value="Justicia">Justicia</option>
-            </select>
+    <div class="max-w-7xl mx-auto bg-white p-8 rounded-lg shadow-md">
 
-            <label>FECHA: </label>
-            <input type="date" name="fecha">
+        <h1 class="text-2xl font-bold mb-6 text-gray-700 border-b pb-2">Lector de Noticias RSS</h1>
 
-            <label style="margin-left: 5vw;">AMPLIAR FILTRO (la descripción contenga la palabra): </label>
-            <input type="text" name="buscar">
+        <form action="index.php" method="get" class="mb-8">
+            <fieldset class="border border-gray-300 rounded-lg p-6">
+                <legend class="text-sm font-semibold text-blue-600 px-2 uppercase tracking-wider">Filtros de Búsqueda</legend>
 
-            <input type="submit" name="filtrar" value="Filtrar">
-        </fieldset>
-    </form>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
 
-    <?php
-    require_once "conexionBBDD.php";
-    require_once "RSSElPais.php";
-    require_once "RSSElMundo.php";
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Periódico:</label>
+                        <select name="periodicos" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 p-2 border">
+                            <option value="elpais" <?php if (isset($_GET['periodicos']) && $_GET['periodicos'] == 'elpais') echo 'selected'; ?>>El País</option>
+                            <option value="elmundo" <?php if (isset($_GET['periodicos']) && $_GET['periodicos'] == 'elmundo') echo 'selected'; ?>>El Mundo</option>
+                        </select>
+                    </div>
 
-    function filtros($sql, $db)
-    {
-        $response = $db->query($sql);
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Categoría:</label>
+                        <select name="categoria" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 p-2 border">
+                            <option value="">Todas</option>
+                            <option value="Política">Política</option>
+                            <option value="Deportes">Deportes</option>
+                            <option value="Ciencia">Ciencia</option>
+                            <option value="España">España</option>
+                            <option value="Economía">Economía</option>
+                            <option value="Música">Música</option>
+                            <option value="Cine">Cine</option>
+                            <option value="Europa">Europa</option>
+                            <option value="Justicia">Justicia</option>
+                        </select>
+                    </div>
 
-        if (!isset($response['results'][0]['response']['result'])) {
-            echo "<p>No se encontraron resultados o hubo un error en la conexión.</p>";
-            var_dump($response);
-            return;
-        }
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha:</label>
+                        <input type="date" name="fecha" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 p-2 border">
+                    </div>
 
-        $data = $response['results'][0]['response']['result'];
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Buscar palabra:</label>
+                        <input type="text" name="buscar" placeholder="En la descripción..." class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 p-2 border">
+                    </div>
+                </div>
 
-        // Si no hay filas, salimos
-        if (empty($data['rows'])) {
-            echo "<p>No hay noticias con ese filtro.</p>";
-            return;
-        }
+                <div class="mt-6 text-right">
+                    <input type="submit" name="filtrar" value="Filtrar Resultados" class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded transition duration-200">
+                </div>
+            </fieldset>
+        </form>
 
-        $cols = $data['cols'];
-        $rows = $data['rows'];
+        <div class="overflow-x-auto">
+            <?php
+            require_once "conexionBBDD.php";
+            require_once "RSSElPais.php";
+            require_once "RSSElMundo.php";
 
-        echo "<table style='border: 5px #E4CCE8 solid;'>";
-        echo "<tr>
-                <th style='color:#66E9D9;'>TITULO</th>
-                <th style='color:#66E9D9;'>CONTENIDO</th>
-                <th style='color:#66E9D9;'>DESCRIPCIÓN</th>
-                <th style='color:#66E9D9;'>CATEGORÍA</th>
-                <th style='color:#66E9D9;'>ENLACE</th>
-                <th style='color:#66E9D9;'>FECHA DE PUBLICACIÓN</th>
-              </tr>";
+            function filtros($sql, $db)
+            {
+                // Si $db falla
+                if (!$db) {
+                    echo "<p class='text-red-500 p-4 bg-red-100 rounded'>Error: No hay conexión a la base de datos.</p>";
+                    return;
+                }
 
-        foreach ($rows as $rawRow) {
+                $response = $db->query($sql);
 
-            $row = [];
-            foreach ($rawRow as $index => $cell) {
-                $colName = $cols[$index]['name'];
-                $val = (is_array($cell) && isset($cell['value'])) ? $cell['value'] : $cell;
-                $row[$colName] = $val;
+                // Verificación de la estructura de respuesta 
+                if (!isset($response['results'][0]['response']['result'])) {
+                    echo "<p class='text-gray-500 italic p-4 text-center'>Realiza una búsqueda para ver resultados.</p>";
+                    return;
+                }
+
+                $data = $response['results'][0]['response']['result'];
+
+                // Si no hay filas
+                if (empty($data['rows'])) {
+                    echo "<div class='bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4' role='alert'>
+                            <p>No hay noticias con ese filtro.</p>
+                          </div>";
+                    return;
+                }
+
+                $cols = $data['cols'];
+                $rows = $data['rows'];
+
+                // INICIO DE LA TABLA
+                echo "<table class='min-w-full divide-y divide-gray-200 text-sm border border-gray-200 rounded-lg overflow-hidden'>";
+
+                // Cabecera
+                echo "<thead class='bg-gray-50'>";
+                echo "<tr>
+                        <th class='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Título</th>
+                        <th class='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Contenido</th>
+                        <th class='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Descripción</th>
+                        <th class='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Categoría</th>
+                        <th class='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Enlace</th>
+                        <th class='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24'>Fecha</th>
+                      </tr>";
+                echo "</thead>";
+
+                // Cuerpo
+                echo "<tbody class='bg-white divide-y divide-gray-200'>";
+
+                foreach ($rows as $rawRow) {
+                    $row = [];
+                    foreach ($rawRow as $index => $cell) {
+                        $colName = $cols[$index]['name'];
+                        $val = (is_array($cell) && isset($cell['value'])) ? $cell['value'] : $cell;
+                        $row[$colName] = $val;
+                    }
+
+                    echo "<tr class='hover:bg-gray-50 transition duration-150'>";
+
+                    // Título
+                    echo "<td class='px-6 py-4 font-medium text-gray-900'>" . $row['titulo'] . "</td>";
+
+                    // Contenido 
+                    $contenido = isset($row['contenido']) ? substr($row['contenido'], 0, 100) . "..." : "";
+                    echo "<td class='px-6 py-4 text-gray-500'>" . $contenido . "</td>";
+
+                    // Descripción
+                    echo "<td class='px-6 py-4 text-gray-500'>" . $row['descripcion'] . "</td>";
+
+                    // Categoría 
+                    echo "<td class='px-6 py-4 whitespace-nowrap'><span class='px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800'>" . $row['categoria'] . "</span></td>";
+
+                    // Enlace
+                    echo "<td class='px-6 py-4 whitespace-nowrap text-blue-600 hover:text-blue-900'><a href='" . $row['link'] . "' target='_blank' class='hover:underline'>Leer más</a></td>";
+
+                    // Fecha
+                    $fecha = date_create($row['fPubli']);
+                    $fechaConversion = $fecha ? date_format($fecha, 'd M Y') : $row['fPubli'];
+                    echo "<td class='px-6 py-4 whitespace-nowrap text-gray-500'>" . $fechaConversion . "</td>";
+
+                    echo "</tr>";
+                }
+                echo "</tbody>";
+                echo "</table>";
             }
 
-            echo "<tr>";
-            echo "<td style='border: 1px #E4CCE8 solid;'>" . $row['titulo'] . "</td>";
+            // --- Lógica de Filtros (Sin cambios funcionales, solo recuperación de variables) ---
+            $periodicos = isset($_GET['periodicos']) ? $_GET['periodicos'] : 'elpais';
+            $categoria  = isset($_GET['categoria']) ? $_GET['categoria'] : '';
+            $fecha      = isset($_GET['fecha']) ? $_GET['fecha'] : '';
+            $palabra    = isset($_GET['buscar']) ? $_GET['buscar'] : '';
 
-            $contenido = isset($row['contenido']) ? substr($row['contenido'], 0, 100) . "..." : "";
-            echo "<td style='border: 1px #E4CCE8 solid;'>" . $contenido . "</td>";
+            if ($periodicos !== 'elpais' && $periodicos !== 'elmundo') {
+                $periodicos = 'elpais';
+            }
 
-            echo "<td style='border: 1px #E4CCE8 solid;'>" . $row['descripcion'] . "</td>";
-            echo "<td style='border: 1px #E4CCE8 solid;'>" . $row['categoria'] . "</td>";
-            echo "<td style='border: 1px #E4CCE8 solid;'><a href='" . $row['link'] . "' target='_blank'>Enlace</a></td>";
+            $sql = "SELECT * FROM $periodicos WHERE 1=1";
 
-            $fecha = date_create($row['fPubli']);
-            $fechaConversion = $fecha ? date_format($fecha, 'd-M-Y') : $row['fPubli'];
-            echo "<td style='border: 1px #E4CCE8 solid;'>" . $fechaConversion . "</td>";
-            echo "</tr>";
-        }
-        echo "</table>";
-    }
+            if ($categoria !== '') {
+                $sql .= " AND categoria LIKE '%$categoria%'";
+            }
+            if ($fecha !== '') {
+                $sql .= " AND fPubli = '$fecha'";
+            }
+            if ($palabra !== '') {
+                $sql .= " AND descripcion LIKE '%$palabra%'";
+            }
 
-    // Variables de filtros
-    $periodicos = isset($_GET['periodicos']) ? $_GET['periodicos'] : 'elpais';
-    $categoria  = isset($_GET['categoria']) ? $_GET['categoria'] : '';
-    $fecha      = isset($_GET['fecha']) ? $_GET['fecha'] : '';
-    $palabra    = isset($_GET['buscar']) ? $_GET['buscar'] : '';
+            $sql .= " ORDER BY fPubli DESC LIMIT 50";
 
-    if ($periodicos !== 'elpais' && $periodicos !== 'elmundo') {
-        $periodicos = 'elpais';
-    }
-
-    $sql = "SELECT * FROM $periodicos WHERE 1=1";
-
-    if ($categoria !== '') {
-        $sql .= " AND categoria LIKE '%$categoria%'";
-    }
-    if ($fecha !== '') {
-        $sql .= " AND fPubli = '$fecha'";
-    }
-    if ($palabra !== '') {
-        $sql .= " AND descripcion LIKE '%$palabra%'";
-    }
-
-    $sql .= " ORDER BY fPubli DESC LIMIT 50";
-
-    // Mostrar resultados
-    filtros($sql, $db);
-    ?>
+            // Mostrar resultados
+            if (isset($db)) {
+                filtros($sql, $db);
+            }
+            ?>
+        </div>
+    </div>
 </body>
 
 </html>
