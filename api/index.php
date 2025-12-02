@@ -69,7 +69,6 @@
 
             function filtros($sql, $db)
             {
-                // Si $db falla
                 if (!$db) {
                     echo "<p class='text-red-500 p-4 bg-red-100 rounded'>Error: No hay conexión a la base de datos.</p>";
                     return;
@@ -77,7 +76,6 @@
 
                 $response = $db->query($sql);
 
-                // Verificación de la estructura de respuesta 
                 if (!isset($response['results'][0]['response']['result'])) {
                     echo "<p class='text-gray-500 italic p-4 text-center'>Realiza una búsqueda para ver resultados.</p>";
                     return;
@@ -85,33 +83,30 @@
 
                 $data = $response['results'][0]['response']['result'];
 
-                // Si no hay filas
                 if (empty($data['rows'])) {
                     echo "<div class='bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4' role='alert'>
-                            <p>No hay noticias con ese filtro.</p>
-                          </div>";
+                <p>No hay noticias con ese filtro.</p>
+              </div>";
                     return;
                 }
 
                 $cols = $data['cols'];
                 $rows = $data['rows'];
 
-                // INICIO DE LA TABLA
-                echo "<table class='min-w-full divide-y divide-gray-200 text-sm border border-gray-200 rounded-lg overflow-hidden'>";
+                echo "<div class='overflow-x-auto rounded-lg border border-gray-200'>";
+                echo "<table class='min-w-full table-fixed divide-y divide-gray-200 text-sm'>";
 
-                // Cabecera
                 echo "<thead class='bg-gray-50'>";
                 echo "<tr>
-                        <th class='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Título</th>
-                        <th class='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Contenido</th>
-                        <th class='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Descripción</th>
-                        <th class='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Categoría</th>
-                        <th class='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Enlace</th>
-                        <th class='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24'>Fecha</th>
-                      </tr>";
+            <th class='w-48 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Título</th>
+            <th class='w-1/4 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Contenido</th>
+            <th class='w-1/4 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Descripción</th>
+            <th class='w-24 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Categoría</th>
+            <th class='w-24 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Enlace</th>
+            <th class='w-32 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Fecha</th>
+          </tr>";
                 echo "</thead>";
 
-                // Cuerpo
                 echo "<tbody class='bg-white divide-y divide-gray-200'>";
 
                 foreach ($rows as $rawRow) {
@@ -123,32 +118,32 @@
                     }
 
                     echo "<tr class='hover:bg-gray-50 transition duration-150'>";
+                    echo "<td class='px-4 py-4 font-medium text-gray-900 align-top break-words'>" . $row['titulo'] . "</td>";
 
-                    // Título
-                    echo "<td class='px-6 py-4 font-medium text-gray-900'>" . $row['titulo'] . "</td>";
-
-                    // Contenido 
+                    // Contenido: Usamos 'truncate' para que salga "..." si es muy largo y no ocupe 10 líneas
+                    // Si prefieres ver todo el texto, cambia 'truncate' por 'break-words'
                     $contenido = isset($row['contenido']) ? substr($row['contenido'], 0, 100) . "..." : "";
-                    echo "<td class='px-6 py-4 text-gray-500'>" . $contenido . "</td>";
+                    echo "<td class='px-4 py-4 text-gray-500 align-top break-words'>" . $contenido . "</td>";
 
-                    // Descripción
-                    echo "<td class='px-6 py-4 text-gray-500'>" . $row['descripcion'] . "</td>";
+                    // Descripción: También limitamos el ancho visual
+                    echo "<td class='px-4 py-4 text-gray-500 align-top break-words text-xs'>" . $row['descripcion'] . "</td>";
 
-                    // Categoría 
-                    echo "<td class='px-6 py-4 whitespace-nowrap'><span class='px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800'>" . $row['categoria'] . "</span></td>";
+                    // Categoría
+                    echo "<td class='px-4 py-4 align-top'><span class='px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800'>" . $row['categoria'] . "</span></td>";
 
                     // Enlace
-                    echo "<td class='px-6 py-4 whitespace-nowrap text-blue-600 hover:text-blue-900'><a href='" . $row['link'] . "' target='_blank' class='hover:underline'>Leer más</a></td>";
+                    echo "<td class='px-4 py-4 align-top text-blue-600 hover:text-blue-900'><a href='" . $row['link'] . "' target='_blank' class='hover:underline'>Visitar</a></td>";
 
                     // Fecha
                     $fecha = date_create($row['fPubli']);
-                    $fechaConversion = $fecha ? date_format($fecha, 'd M Y') : $row['fPubli'];
-                    echo "<td class='px-6 py-4 whitespace-nowrap text-gray-500'>" . $fechaConversion . "</td>";
+                    $fechaConversion = $fecha ? date_format($fecha, 'd/m/Y') : $row['fPubli'];
+                    echo "<td class='px-4 py-4 align-top text-gray-500 whitespace-nowrap'>" . $fechaConversion . "</td>";
 
                     echo "</tr>";
                 }
                 echo "</tbody>";
                 echo "</table>";
+                echo "</div>";
             }
 
             // --- Lógica de Filtros (Sin cambios funcionales, solo recuperación de variables) ---
